@@ -37,11 +37,17 @@ class MensajesDetail(views.APIView):
 			return Response({"mensaje":"Error"}, status=status.HTTP_404_NOT_FOUND)
 
 	def put(self, request, pk):
-		#mensaje = self.get_object(pk)
-		#ms = MensajeSerializer(mensaje, data=request.data)
-		#if ms.is_valid():
-		#	ms.save()
-		pass
+		us = UserSerializer(request.user) 
+		usuarioActual = us.data
+		if pk in usuarioActual['mensajes']:
+			mensaje = self.get_object(pk)
+			ms = MensajeSerializer(mensaje, data=request.data)
+			if ms.is_valid():
+				ms.save()
+				return Response(ms.data, status=status.HTTP_200_OK)
+			return Response({"error":"No es valido"},status=status.HTTP_400_BAD_REQUEST)
+		return Response({"error":"No es el mismo usuario", "respuesta":None}, status=status.HTTP_400_BAD_REQUEST)
+		
 
 	def delete(self, request, pk):
 		print(request.META.get('HTTP_X_MYHEADER'))
@@ -80,3 +86,10 @@ class UsuarioDetail(views.APIView):
 			return Response(us.data, status=status.HTTP_200_OK) 
 		except:
 			return Response({"mensaje":"Error"}, status=status.HTTP_404_NOT_FOUND)
+
+class UsuarioActual(views.APIView):
+	permission_classes = [IsAuthenticated]
+
+	def get(self, request):
+		s = UserSerializer(request.user)
+		return Response(s.data, status=status.HTTP_200_OK)

@@ -10,7 +10,7 @@ class UserSerializer(serializers.ModelSerializer):
 		fields=['id', 'username', 'mensajes']
 
 class MensajeSerializer(serializers.ModelSerializer):
-	usuario =  serializers.CharField(source='owner.username', read_only=True)
+	usuario =  serializers.CharField(source='owner.id', read_only=True)
 	class Meta:
 		model=Mensaje
 		fields=['id', 'message', 'url','deleted', 'usuario']
