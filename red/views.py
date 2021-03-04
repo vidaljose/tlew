@@ -15,7 +15,7 @@ class MensajesList(views.APIView):
 	permission_classes = [IsAuthenticated]
 
 	def get(self, request):
-		mensajes = Mensaje.objects.all()
+		mensajes = Mensaje.objects.filter(deleted=False)
 		ms = MensajeSerializer(mensajes, many=True)
 		return Response(ms.data, status=status.HTTP_200_OK)
 
@@ -48,10 +48,22 @@ class MensajesDetail(views.APIView):
 			return Response({"error":"No es valido"},status=status.HTTP_400_BAD_REQUEST)
 		return Response({"error":"No es el mismo usuario", "respuesta":None}, status=status.HTTP_400_BAD_REQUEST)
 		
-
+	#borrado logico
 	def delete(self, request, pk):
-		print(request.META.get('HTTP_X_MYHEADER'))
-		return Response({"mensaje":"prueba delete"})
+		us = UserSerializer(request.user) 
+		usuarioActual = us.data
+		if pk in usuarioActual['mensajes']:
+			mensaje = self.get_object(pk)
+			print(request.data)
+			request.data['deleted']=True
+			print(request.data)
+			ms = MensajeSerializer(mensaje, data=request.data)
+			if ms.is_valid():
+				ms.save()
+				return Response(ms.data, status=status.HTTP_200_OK)
+			return Response({"error":"No es valido"},status=status.HTTP_400_BAD_REQUEST)
+		return Response({"error":"No es el mismo usuario", "respuesta":None}, status=status.HTTP_400_BAD_REQUEST)
+		
 
 	def get(self, request, pk):
 		try:
