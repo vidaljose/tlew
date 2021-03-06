@@ -6,6 +6,10 @@ from .models import Mensaje
 from .serializers import MensajeSerializer, UserSerializer
 from rest_framework import status
 from django.contrib.auth.models import User
+from rest_framework.parsers import FileUploadParser
+from django.core.files.storage import default_storage
+import os
+import binascii
 
 
 #ms = mensaje serializer
@@ -13,13 +17,18 @@ from django.contrib.auth.models import User
 #mo = mensaje object
 class MensajesList(views.APIView):
 	permission_classes = [IsAuthenticated]
+	parser_classes = [FileUploadParser]
 
 	def get(self, request):
 		mensajes = Mensaje.objects.filter(deleted=False)
 		ms = MensajeSerializer(mensajes, many=True)
 		return Response(ms.data, status=status.HTTP_200_OK)
 
-	def post(self, request, format=None):
+	def post(self, request, format=None, filename=None):
+		file_obj = request.data['file']
+		name = binascii.hexlify(os.urandom(8)).decode('ascii')
+		if file_obj:
+			file_name = default_storage.save("storage/"+file_obj.name,file_obj)
 		s = MensajeSerializer(data=request.data)
 		if s.is_valid():
 			s.save(owner=self.request.user)
